@@ -1,0 +1,10 @@
+name: BeamBukkit
+main: io.github.mosadie.BeamBukkit.BeamBukkit
+version: 1.0
+author: MoSadie
+description: Manages a connection to Beam to make Beam Interactive compatable Bukkit plugins.
+commands:
+  beambukkit:
+    description: Main command of the plugin. Allows you to configure the plugin.
+    usage: /<command> <help or debug>
+    aliases: bb
