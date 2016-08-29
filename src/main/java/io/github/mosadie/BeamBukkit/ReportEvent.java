@@ -17,12 +17,18 @@ public class ReportEvent extends Event{
 	}
 	
 	private Report report;
+	private BeamBukkit bb;
 	
-	ReportEvent(Report report) {
+	ReportEvent(Report report, BeamBukkit bb) {
 		this.report = report;
+		this.bb = bb;
 	}
 	
 	public Report getReport() {
 		return report;
+	}
+	
+	public BeamBukkit getBeamBukkit() {
+		return bb;
 	}
 }

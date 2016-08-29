@@ -14,10 +14,6 @@
     <id>beam-snapshots</id>
     <url>https://maven.beam.pro/content/repositories/snapshots/</url>
   </repository>
-  <repository>
-  	<id>google</id>
-  	<url>http://repo1.maven.org/maven2/com/google/protobuf/protoc/</url>
-  </repository>
   </repositories>
   <dependencies>
   <!--Spigot API-->
@@ -38,6 +34,7 @@
     <groupId>pro.beam</groupId>
     <artifactId>api</artifactId>
     <version>2.2.1-SNAPSHOT</version>
+    <scope>compile</scope>
   </dependency>
   <dependency>
       <groupId>pro.beam</groupId>

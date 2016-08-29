@@ -112,7 +112,7 @@ public class BeamBukkit extends JavaPlugin {
 						results.add("End of report");
 						debugCS.sendMessage(results.toArray(new String[0]));
 					}
-					ReportEvent reportEvent = new ReportEvent(report);
+					ReportEvent reportEvent = new ReportEvent(report, this);
 					Bukkit.getServer().getPluginManager().callEvent(reportEvent);
 				});
 		} catch (Exception e){

@@ -41,10 +41,6 @@
       <id>beam-snapshots</id>
       <url>https://maven.beam.pro/content/repositories/snapshots/</url>
     </repository>
-    <repository>
-      <id>google</id>
-      <url>http://repo1.maven.org/maven2/com/google/protobuf/protoc/</url>
-    </repository>
   </repositories>
   <dependencies>
     <dependency>
