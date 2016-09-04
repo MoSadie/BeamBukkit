@@ -4,7 +4,7 @@
   <groupId>io.github.mosadie</groupId>
   <artifactId>beambukkit</artifactId>
   <name>BeamBukkit</name>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <description>A helper plugin to manage a connection to Beam</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
