@@ -17,9 +17,6 @@ import io.github.mosadie.BeamBukkit.commands.beambukkit;
 import pro.beam.api.BeamAPI;
 import pro.beam.interactive.net.packet.Protocol;
 import pro.beam.interactive.net.packet.Protocol.Report;
-import pro.beam.interactive.net.packet.Protocol.Report.JoystickInfo;
-import pro.beam.interactive.net.packet.Protocol.Report.ScreenInfo;
-import pro.beam.interactive.net.packet.Protocol.Report.TactileInfo;
 import pro.beam.interactive.robot.Robot;
 import pro.beam.interactive.robot.RobotBuilder;
 
