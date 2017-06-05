@@ -1,10 +1,10 @@
-name: BeamBukkit
-main: io.github.mosadie.BeamBukkit.BeamBukkit
+name: MixBukkit
+main: io.github.mosadie.MixBukkit.MixBukkit
 version: 1.0
 author: MoSadie
-description: Manages a connection to Beam to make Beam Interactive compatable Bukkit plugins.
+description: Manages a connection to Mixer to make Mixer Interactive compatable Bukkit plugins.
 commands:
-  beambukkit:
+  mixbukkit:
     description: Main command of the plugin. Allows you to configure the plugin.
     usage: /<command> <help or debug>
-    aliases: bb
+    aliases: mb
