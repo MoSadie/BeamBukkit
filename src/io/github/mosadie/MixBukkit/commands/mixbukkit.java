@@ -7,8 +7,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
+import com.mixer.api.MixerAPI;
+import com.mixer.interactive.GameClient;
+
 import io.github.mosadie.MixBukkit.MixBukkit;
-import pro.beam.interactive.net.packet.Protocol.Report;
+//import pro.beam.interactive.net.packet.Protocol.Report;
 
 public class mixbukkit implements CommandExecutor{
 	MixBukkit plugin;
@@ -29,19 +32,19 @@ public class mixbukkit implements CommandExecutor{
 			sender.sendMessage(help);
 			return true;
 		case "report":
-			Report report = plugin.getInteractiveReport();
-			if (report == null) {
-				sender.sendMessage("ERROR: No report found! Is your interactive game running on Mixer?");
-				return true;
-			}
+			//Report report = plugin.getInteractiveReport();
+			//if (report == null) {
+			//	sender.sendMessage("ERROR: No report found! Is your interactive game running on Mixer?");
+			//	return true;
+			//}
 			List<String> results = new ArrayList<String>();
 			results.add("Current Report:");
 			results.add("Joysticks:");
-			for (int i = 0; i<report.getJoystickCount();i++) results.add("Joystick #" + i);
+			//for (int i = 0; i<report.getJoystickCount();i++) results.add("Joystick #" + i);
 			results.add("Buttons:");
-			for (int i = 0; i<report.getTactileCount();i++) results.add("Button #" + i + " ID: " + report.getTactile(i).getId() + " People Start Press: " + report.getTactile(i).getPressFrequency());
+			//for (int i = 0; i<report.getTactileCount();i++) results.add("Button #" + i + " ID: " + report.getTactile(i).getId() + " People Start Press: " + report.getTactile(i).getPressFrequency());
 			results.add("Screens:");
-			for (int i = 0;i<report.getScreenCount();i++) results.add("Screen #" + i);
+			//for (int i = 0;i<report.getScreenCount();i++) results.add("Screen #" + i);
 			results.add("End of report");
 			sender.sendMessage(results.toArray(new String[0]));
 			return true;
@@ -52,14 +55,30 @@ public class mixbukkit implements CommandExecutor{
 			}
 			switch (args[1]) {
 			case "on":
-				plugin.setDebugCS(sender);
+				//plugin.setDebugCS(sender);
 				return true;
 			case "off":
-				plugin.setDebugCS(null);
+				//plugin.setDebugCS(null);
 				return true;
 			default:
 				sender.sendMessage("/mixbukkit debug <on or off>");
 				return true;
+			}
+		case "setup":
+			if (plugin.mixer != null) {
+				plugin.mixer = null;
+			}
+			if (plugin.gameClient != null) {
+				plugin.gameClient.disconnect();
+				plugin.gameClient = null;
+			}
+			String OAuth = plugin.getOAuthToken(sender);
+			plugin.mixer = new MixerAPI(OAuth);
+			plugin.gameClient = new GameClient(plugin.config.getInt("mixer_project_version"));
+			if (plugin.config.getBoolean("mixer_sharecode_needed")) {
+				plugin.gameClient.connect(OAuth, plugin.config.getString("mixer_sharecode"));
+			} else {
+				plugin.gameClient.connect(OAuth);
 			}
 		default: 
 			return false;

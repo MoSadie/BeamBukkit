@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.mosadie</groupId>
-  <artifactId>beambukkit</artifactId>
-  <name>BeamBukkit</name>
+  <artifactId>mixbukkit</artifactId>
+  <name>MixBukkit</name>
   <version>1.0.0-SNAPSHOT</version>
-  <description>A helper plugin to manage a connection to Beam</description>
+  <description>A helper plugin to manage a connection to Mixer.</description>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
@@ -43,15 +43,19 @@
       <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
     </repository>
     <repository>
-      <id>beam-snapshots</id>
-      <url>https://maven.beam.pro/content/repositories/snapshots/</url>
+      <id>mixer-releases</id>
+      <url>https://maven.mixer.com/content/repositories/releases/</url>
+    </repository>
+    <repository>
+      <id>mixer-snapshots</id>
+      <url>https://maven.mixer.com/content/repositories/snapshots/</url>
     </repository>
   </repositories>
   <dependencies>
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.10.2-R0.1-SNAPSHOT</version>
+      <version>1.12-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -61,10 +65,6 @@
         <exclusion>
           <artifactId>json-simple</artifactId>
           <groupId>com.googlecode.json-simple</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>ebean</artifactId>
-          <groupId>org.avaje</groupId>
         </exclusion>
         <exclusion>
           <artifactId>snakeyaml</artifactId>
@@ -79,7 +79,7 @@
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>bukkit</artifactId>
-      <version>1.10.2-R0.1-SNAPSHOT</version>
+      <version>1.12-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -89,10 +89,6 @@
         <exclusion>
           <artifactId>json-simple</artifactId>
           <groupId>com.googlecode.json-simple</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>ebean</artifactId>
-          <groupId>org.avaje</groupId>
         </exclusion>
         <exclusion>
           <artifactId>snakeyaml</artifactId>
