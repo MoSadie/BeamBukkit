@@ -9,6 +9,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -34,9 +35,20 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import io.github.mosadie.MixBukkit.commands.mixbukkit;
+import io.github.mosadie.MixBukkit.events.ControlMouseDownInput;
 
 import com.google.common.eventbus.Subscribe;
 import com.mixer.api.MixerAPI;
+import com.mixer.api.resource.MixerUser;
+import com.mixer.api.resource.chat.MixerChat;
+import com.mixer.api.resource.chat.methods.AuthenticateMessage;
+import com.mixer.api.resource.chat.methods.ChatSendMethod;
+import com.mixer.api.resource.chat.methods.WhisperMethod;
+import com.mixer.api.resource.chat.replies.AuthenticationReply;
+import com.mixer.api.resource.chat.replies.ReplyHandler;
+import com.mixer.api.resource.chat.ws.MixerChatConnectable;
+import com.mixer.api.services.impl.ChatService;
+import com.mixer.api.services.impl.UsersService;
 import com.mixer.interactive.GameClient;
 import com.mixer.interactive.event.InteractiveEvent;
 import com.mixer.interactive.event.control.input.ControlMouseDownInputEvent;
@@ -45,12 +57,14 @@ import com.mixer.interactive.exception.InteractiveRequestNoReplyException;
 
 public class MixBukkit extends JavaPlugin {
 	public FileConfiguration config = this.getConfig();
-	//private int channelID;
-	//private Report InteractiveReport;
 	//private CommandSender debugCS = null;
 	//private Robot robot;
 	public GameClient gameClient;
 	public MixerAPI mixer = null;
+
+	public MixerUser user = null;
+	public MixerChat chat = null;
+	public MixerChatConnectable chatConnectable = null;
 
 
 	@Override
@@ -69,62 +83,39 @@ public class MixBukkit extends JavaPlugin {
 		getLogger().info("Mixer Project Version: " + config.getString("mixer_project_version"));
 		getLogger().info("Using share code: "+ config.getString("mixer_sharecode_needed"));
 		if (!config.getBoolean("configured")) {
-			getLogger().severe("Configuration file not marked as configured! Please make sure to change the value of configured to true!");
+			getLogger().severe("Configuration file not marked as configured! Please make sure to change the value of configured to true! You will not be able to use interactive features!");
 			return;
 		}
 	}
-		@Subscribe
-		public void onControlMouseDownEvent(ControlMouseDownInputEvent event) {
-			if (event.getTransaction() != null) {
-				try {
-					event.getTransaction().capture(gameClient);
-				} catch (InteractiveRequestNoReplyException | InteractiveReplyWithErrorException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		/*
-		try {
-			URL api = new URL("https://mixer.com/api/v1/channels/"+config.getString("mixer_username")+"?fields=id");
 
-			URLConnection connection = api.openConnection();
-			BufferedReader in = new BufferedReader(new InputStreamReader(
-					connection.getInputStream()));
-			String response = in.readLine();
-			in.close();
-			if (response != null) {
-				String[] responses = response.split(":");
-				if (responses[0].equals("{\"message\"")) {
-					getLogger().severe("There was a problem getting the channel ID:" + responses[1].split(",")[0]);
-					Bukkit.getServer().getPluginManager().disablePlugin(this);
-					return;
-				}
-				if (responses[0].equals("{\"id\"")) channelID = Integer.parseInt(responses[1].split("}")[0]);
+	public boolean chat(String message) {
+		if (mixer == null) return false;
+		setupChatIfNotDoneAlready();
+		chatConnectable.send(ChatSendMethod.of(message));
+		return true;
+	}
+	
+	public boolean whisper(MixerUser user, String message) {
+		if (mixer == null) return false;
+		setupChatIfNotDoneAlready();
+		chatConnectable.send(WhisperMethod.builder().to(user).send(message).build());
+		return true;
+	}
+
+	@Subscribe
+	public void onControlMouseDownEvent(ControlMouseDownInputEvent event) {
+		ControlMouseDownInput firedEvent = new ControlMouseDownInput(this,event);
+		Bukkit.getServer().getPluginManager().callEvent(firedEvent);
+		if (event.getTransaction() != null && !firedEvent.isCancelled()) {
+			try {
+				event.getTransaction().capture(gameClient);
+			} catch (InteractiveRequestNoReplyException | InteractiveReplyWithErrorException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			getLogger().warning(e.toString());
 		}
-		getLogger().info("Channel ID: "+channelID);
-		try {
-			MixerAPI mixer = new MixerAPI();
-			robot = null;
-			if (!twoFactor) {
-				robot = new RobotBuilder()
-						.username(config.getString("mixer_username"))
-						.password(config.getString("mixer_password"))
-						.channel(channelID)
-						.build(mixer)
-						.get();
-			} else if (twoFactor && config.getString("mixer_twofactorcode").length() == 6) {
-				robot = new RobotBuilder()
-						.username(config.getString("mixer_username"))
-						.password(config.getString("mixer_password"))
-						.channel(channelID)
-						.twoFactor(config.getString("mixer_twofactorcode"))
-						.build(mixer)
-						.get();
-			}
+	}
+	/*
 			if (robot!=null)
 				robot.on(Protocol.Report.class, report -> {
 					InteractiveReport = report;
@@ -173,82 +164,51 @@ public class MixBukkit extends JavaPlugin {
             }
         }
     }
-		 */
+	 */
 
-	public String getOAuthToken(CommandSender cs) {
-		JSONObject json = new JSONObject();
-		json.put("client_id", "dabece39df722e254692a02e4acedf5137b6c34f380a200e");
-		json.put("scope", "chat:connect chat:chat chat:whisper interactive:robot:self");
-		boolean finished = false;
-		try {
-			String result = Request.Post("https://mixer.com/api/v1/oauth/shortcode").bodyString(json.toJSONString(), ContentType.APPLICATION_JSON).execute().returnContent().asString();
-			JSONParser parser = new JSONParser();
-			try {
-				JSONObject resultJSON = (JSONObject) parser.parse(result);
-				if (!resultJSON.containsKey("code")) {
-					finished = true;
-					return "ERROR";
-				}
-				String handle = (String) resultJSON.get("handle");
-				String code = (String) resultJSON.get("code");
-				double time = Double.parseDouble(((Long) resultJSON.get("expires_in")).toString());
-				cs.sendMessage("----------------------------------------------------------------");
-				cs.sendMessage("Please go to https://mixer.com/go and type in the code: " + code);
-				cs.sendMessage("----------------------------------------------------------------");
-				while (!finished && time > 0) {
-					Content content = Request.Get("https://mixer.com/api/v1/oauth/shortcode/check/"+handle).execute().returnContent();
-					String response;
-					if (content == null) { 
-						response = "{\"statusCode\":204}";
-					}
-					else {
-						response = content.asString();
-					}
-					JSONObject codeJSON = (JSONObject) parser.parse(response);
-					long statusCode;
-					if (content == null) {
-						statusCode = (long) codeJSON.get("statusCode");
-					}
-					else {
-						statusCode = 200;
-					}
-					if (statusCode == 200L) {
-						if (codeJSON.containsKey("code")) {
-							finished = true;
-							cs.sendMessage("OAuth token received!");
-							return (String) codeJSON.get("code");
-						} else {
-							finished = true;
-							return "ERROR";
-						}
-					} else if (statusCode != 204L) {
-						finished = true;
-						return "ERROR";
-					}
-					time -= .5;
-					try {
-						Thread.sleep(500);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					if (time <= 0) {
-						cs.sendMessage("Please ignore the previous code, it has now expired.");
-						return getOAuthToken(cs);
-					}
-				}
-				finished = true;
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public void setupChatIfNotDoneAlready() {
+		if (user != null && chat != null && chatConnectable != null) return;
+		setupChat();
+	}
+
+	public void setupChat() {
+		if (mixer == null) return;
+		if (user != null) user = null;
+		if (chat != null) chat = null;
+		if (chatConnectable != null) {
+			chatConnectable.disconnect();
+			chatConnectable = null;
 		}
-		return "ERROR";
+		try {
+			user = mixer.use(UsersService.class).getCurrent().get();
+			chat = mixer.use(ChatService.class).findOne(user.channel.id).get();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("---------------------");
+			System.out.println(((com.mixer.api.http.HttpBadResponseException) e.getCause()).response.status());
+		}
+		if (chatConnectable == null) {
+			chatConnectable = chat.connectable(mixer);
+		}
+		if (chatConnectable.connect()) {
+			chatConnectable.send(AuthenticateMessage.from(user.channel, user, chat.authkey), new ReplyHandler<AuthenticationReply>() {
+				public void onSuccess(AuthenticationReply reply) {
+					chatConnectable.send(ChatSendMethod.of("MixBukkit connected!"));
+				}
+				public void onFailure(Throwable var1) {
+					var1.printStackTrace();
+				}
+			});
+		}
+
+	}
+	
+	public void setup(CommandSender cs) {
+		SetupThread st = new SetupThread(this,cs);
+		st.start();
 	}
 }

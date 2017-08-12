@@ -16,7 +16,7 @@ import io.github.mosadie.MixBukkit.MixBukkit;
 public class mixbukkit implements CommandExecutor{
 	MixBukkit plugin;
 
-	String[] help = {"How to use the MixBukkit command:","/mixbukkit help: displays this message.","/mixbukkit report: Displays the last recived report from Beam","/mixbukkit debug <on or off>: Enables/Disables debug mode"};
+	String[] help = {"How to use the MixBukkit command:","/mixbukkit help -> displays this message.","/mixbukkit report -> Displays the last recived report from Mixer","/mixbukkit debug <on or off> -> Enables/Disables debug mode","/mixbukkit setup -> Starts the setup wizard for the Mixer connection","/mixbukkit chat <message> -> Sends a message to Mixer chat as the connected user"};
 
 	public mixbukkit(MixBukkit plugin) {
 		this.plugin = plugin;
@@ -72,14 +72,34 @@ public class mixbukkit implements CommandExecutor{
 				plugin.gameClient.disconnect();
 				plugin.gameClient = null;
 			}
-			String OAuth = plugin.getOAuthToken(sender);
-			plugin.mixer = new MixerAPI(OAuth);
-			plugin.gameClient = new GameClient(plugin.config.getInt("mixer_project_version"));
-			if (plugin.config.getBoolean("mixer_sharecode_needed")) {
-				plugin.gameClient.connect(OAuth, plugin.config.getString("mixer_sharecode"));
-			} else {
-				plugin.gameClient.connect(OAuth);
+			plugin.setup(sender);
+			return true;
+		case "chat":
+			if (plugin.mixer == null) {
+				sender.sendMessage("Please run /mixbukkit setup before running this command!");
+				return true;
 			}
+			if (args.length == 1) {
+				sender.sendMessage(help);
+				return true;
+			}
+			plugin.setupChatIfNotDoneAlready();
+			String message = "";
+			for (int i = 2; i > args.length; i++) {
+				if (i == 2) message = args[i];
+				else message = message+" "+args[i];
+			}
+			plugin.chat(message);
+			sender.sendMessage("<"+plugin.user.username+" via Mixer> "+message);
+			return true;
+		case "status":
+			sender.sendMessage("Status of MixBukkit plugin:");
+			sender.sendMessage("Mixer API setup: " + (plugin.mixer == null ? "No" : "Yes"));
+			sender.sendMessage("Game Client setup: " + (plugin.gameClient == null ? "No" : "Yes"));
+			sender.sendMessage("Mixer User found: " + (plugin.user == null ? "No" : "Yes"));
+			sender.sendMessage("Mixer Chat found: " + (plugin.chat == null ? "No" : "Yes"));
+			sender.sendMessage("Mixer Chat Connection setup: " + (plugin.chatConnectable == null ? "No" : "Yes"));
+			return true;
 		default: 
 			return false;
 		}
