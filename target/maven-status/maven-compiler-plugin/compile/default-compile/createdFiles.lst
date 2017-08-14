@@ -1,0 +1,12 @@
+io\github\mosadie\MixBukkit\events\ControlMouseUpInput.class
+io\github\mosadie\MixBukkit\RefreshTask.class
+io\github\mosadie\MixBukkit\events\ControlMouseDownInput.class
+io\github\mosadie\MixBukkit\SetupThread.class
+io\github\mosadie\MixBukkit\ReportEvent.class
+io\github\mosadie\MixBukkit\events\ControlInputEventBase.class
+io\github\mosadie\MixBukkit\MixBukkit$1.class
+io\github\mosadie\MixBukkit\MixBukkit.class
+io\github\mosadie\MixBukkit\RefreshTask$1.class
+io\github\mosadie\MixBukkit\SetupThread$1.class
+io\github\mosadie\MixBukkit\commands\mixbukkit.class
+io\github\mosadie\MixBukkit\events\ControlMoveInput.class

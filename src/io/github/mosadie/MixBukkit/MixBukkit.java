@@ -17,6 +17,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Form;
@@ -35,7 +36,10 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import io.github.mosadie.MixBukkit.commands.mixbukkit;
+import io.github.mosadie.MixBukkit.events.ControlInputEventBase;
 import io.github.mosadie.MixBukkit.events.ControlMouseDownInput;
+import io.github.mosadie.MixBukkit.events.ControlMouseUpInput;
+import io.github.mosadie.MixBukkit.events.ControlMoveInput;
 
 import com.google.common.eventbus.Subscribe;
 import com.mixer.api.MixerAPI;
@@ -51,9 +55,13 @@ import com.mixer.api.services.impl.ChatService;
 import com.mixer.api.services.impl.UsersService;
 import com.mixer.interactive.GameClient;
 import com.mixer.interactive.event.InteractiveEvent;
+import com.mixer.interactive.event.control.input.ControlInputEvent;
 import com.mixer.interactive.event.control.input.ControlMouseDownInputEvent;
+import com.mixer.interactive.event.control.input.ControlMouseUpInputEvent;
+import com.mixer.interactive.event.control.input.ControlMoveInputEvent;
 import com.mixer.interactive.exception.InteractiveReplyWithErrorException;
 import com.mixer.interactive.exception.InteractiveRequestNoReplyException;
+import com.mixer.interactive.gson.ControlInputEventAdapter;
 
 public class MixBukkit extends JavaPlugin {
 	public FileConfiguration config = this.getConfig();
@@ -65,6 +73,8 @@ public class MixBukkit extends JavaPlugin {
 	public MixerUser user = null;
 	public MixerChat chat = null;
 	public MixerChatConnectable chatConnectable = null;
+	
+	private RefreshTask task;
 
 
 	@Override
@@ -79,12 +89,25 @@ public class MixBukkit extends JavaPlugin {
 		saveConfig();
 
 		getLogger().info("Configuration:");
-		getLogger().info("Configured: " + config.getBoolean("configured"));
+		getLogger().info("Interactive Configured: " + config.getBoolean("configured"));
 		getLogger().info("Mixer Project Version: " + config.getString("mixer_project_version"));
 		getLogger().info("Using share code: "+ config.getString("mixer_sharecode_needed"));
-		if (!config.getBoolean("configured")) {
-			getLogger().severe("Configuration file not marked as configured! Please make sure to change the value of configured to true! You will not be able to use interactive features!");
-			return;
+		getLogger().info("Refresh Token Available: " + (config.contains("refresh_token") ? "Yes" : "No"));
+		
+		if (config.contains("refresh_token")) {
+			task =new RefreshTask(this, (String) config.get("refresh_token"));
+			task.run();
+		}
+	}
+	
+	@Override 
+	public void onDisable() {
+		if (gameClient != null) {
+			gameClient.ready(false);
+			gameClient.disconnect();
+		}
+		if (chatConnectable != null) {
+			chatConnectable.disconnect();
 		}
 	}
 
@@ -101,11 +124,72 @@ public class MixBukkit extends JavaPlugin {
 		chatConnectable.send(WhisperMethod.builder().to(user).send(message).build());
 		return true;
 	}
-
+	
 	@Subscribe
-	public void onControlMouseDownEvent(ControlMouseDownInputEvent event) {
+	public void workaroundEventCallerBecauseEventsAreBroken(ControlInputEvent event) {
+		//gameClient.GSON.fromJson(event.getControlInput().getRawInput()., ControlInputEvent.class);
+		switch (event.getControlInput().getEvent()) {
+        case "mousedown": {
+            onControlMouseDownInputEvent(new ControlMouseDownInputEvent(event.getParticipantID(), event.getTransaction() == null ? null : event.getTransaction().getTransactionID(), event.getControlInput()));
+        }
+        case "mouseup": {
+            onControlMouseUpInputEvent(new ControlMouseUpInputEvent(event.getParticipantID(), event.getTransaction() == null ? null : event.getTransaction().getTransactionID(), event.getControlInput()));
+        }
+        case "move": {
+            onControlMoveInputEvent(new ControlMoveInputEvent(event.getParticipantID(), event.getTransaction() == null ? null : event.getTransaction().getTransactionID(), event.getControlInput()));
+        }
+        default:
+            onGenericControlInputEvent(event);
+    }
+	}
+	
+	
+	public void onGenericControlInputEvent(ControlInputEvent event) {
+		ControlInputEventBase firedEvent = new ControlInputEventBase(this,event);
+		Bukkit.getServer().getPluginManager().callEvent(firedEvent);
+		System.out.println("New GENERIC Event Fired! Thing "+firedEvent.getControlID()+" triggered by user " + event.getParticipantID());
+		if (event.getTransaction() != null && !firedEvent.isCancelled()) {
+			try {
+				event.getTransaction().capture(gameClient);
+			} catch (InteractiveRequestNoReplyException | InteractiveReplyWithErrorException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void onControlMouseUpInputEvent(ControlMouseUpInputEvent event) {
+		ControlMouseUpInput firedEvent = new ControlMouseUpInput(this,event);
+		Bukkit.getServer().getPluginManager().callEvent(firedEvent);
+		System.out.println("New Event Fired! Button "+firedEvent.getControlID()+" pressed by user " + event.getParticipantID());
+		if (event.getTransaction() != null && !firedEvent.isCancelled()) {
+			try {
+				event.getTransaction().capture(gameClient);
+			} catch (InteractiveRequestNoReplyException | InteractiveReplyWithErrorException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void onControlMoveInputEvent(ControlMoveInputEvent event) {
+		ControlMoveInput firedEvent = new ControlMoveInput(this,event);
+		Bukkit.getServer().getPluginManager().callEvent(firedEvent);
+		System.out.println("New Event Fired! Joystick "+firedEvent.getControlID()+" pressed by user " + event.getParticipantID());
+		if (event.getTransaction() != null && !firedEvent.isCancelled()) {
+			try {
+				event.getTransaction().capture(gameClient);
+			} catch (InteractiveRequestNoReplyException | InteractiveReplyWithErrorException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void onControlMouseDownInputEvent(ControlMouseDownInputEvent event) {
 		ControlMouseDownInput firedEvent = new ControlMouseDownInput(this,event);
 		Bukkit.getServer().getPluginManager().callEvent(firedEvent);
+		System.out.println("New Event Fired! Button "+firedEvent.getControlID()+" pressed by user " + event.getParticipantID());
 		if (event.getTransaction() != null && !firedEvent.isCancelled()) {
 			try {
 				event.getTransaction().capture(gameClient);
@@ -188,8 +272,6 @@ public class MixBukkit extends JavaPlugin {
 		} catch (ExecutionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("---------------------");
-			System.out.println(((com.mixer.api.http.HttpBadResponseException) e.getCause()).response.status());
 		}
 		if (chatConnectable == null) {
 			chatConnectable = chat.connectable(mixer);
@@ -197,7 +279,7 @@ public class MixBukkit extends JavaPlugin {
 		if (chatConnectable.connect()) {
 			chatConnectable.send(AuthenticateMessage.from(user.channel, user, chat.authkey), new ReplyHandler<AuthenticationReply>() {
 				public void onSuccess(AuthenticationReply reply) {
-					chatConnectable.send(ChatSendMethod.of("MixBukkit connected!"));
+					//chatConnectable.send(ChatSendMethod.of("MixBukkit connected!"));
 				}
 				public void onFailure(Throwable var1) {
 					var1.printStackTrace();
@@ -210,5 +292,39 @@ public class MixBukkit extends JavaPlugin {
 	public void setup(CommandSender cs) {
 		SetupThread st = new SetupThread(this,cs);
 		st.start();
+	}
+	
+	public void finishSetup(JSONObject json, CommandSender cs) {
+		String OAuth = (String) json.get("access_token");
+		config.set("refresh_token", json.get("refresh_token"));
+		task = new RefreshTask(this, (String) json.get("refresh_token"));
+		task.runTaskLater(this, 19*((Long) json.get("expires_in")));
+		saveConfig();
+		if (mixer != null) mixer = null;
+		if (gameClient != null) {
+			gameClient.ready(false);
+			gameClient.disconnect();
+			gameClient = null;
+		}
+		mixer = new MixerAPI(OAuth);
+		cs.sendMessage("Setup of Mixer API finished!");
+		if (config.getBoolean("configured")) {
+			gameClient = new GameClient(config.getInt("mixer_project_version"));
+			if (config.getBoolean("mixer_sharecode_needed")) {
+				gameClient.connect(OAuth, config.getString("mixer_sharecode"));
+				cs.sendMessage("Setup of Game Client finished!");
+				cs.sendMessage("All Done!");
+				return;
+			} else {
+				gameClient.connect(OAuth);
+				gameClient.getEventBus().register(this);
+				gameClient.ready(true);
+				cs.sendMessage("Setup of Game Client finished!");
+				cs.sendMessage("All Done!");
+			}
+		} else {
+			cs.sendMessage("All Done!");
+			return;
+		}
 	}
 }

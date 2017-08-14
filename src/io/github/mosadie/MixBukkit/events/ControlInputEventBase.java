@@ -24,10 +24,12 @@ public class ControlInputEventBase extends Event implements Cancellable {
 	
 	private final MixBukkit mb;
 	private final ControlInputEvent event;
+	private final String controlID;
 	
 	public ControlInputEventBase(MixBukkit mb, ControlInputEvent event) {
 		this.mb = mb;
 		this.event = event;
+		this.controlID = event.getControlInput().getControlID();
 	}
 
 	@Override
@@ -40,4 +42,11 @@ public class ControlInputEventBase extends Event implements Cancellable {
 		isCancelled = canceled;
 	}
 	
+	public String getControlID() {
+		return controlID;
+	}
+	
+	public ControlInputEvent getEvent() {
+		return event;
+	}
 }

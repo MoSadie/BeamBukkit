@@ -1,11 +1,25 @@
 package io.github.mosadie.MixBukkit;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.client.fluent.Response;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.bukkit.command.CommandSender;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -15,6 +29,9 @@ import com.mixer.api.MixerAPI;
 import com.mixer.interactive.GameClient;
 
 public class SetupThread extends Thread {
+	
+	public static final String client_id = "dabece39df722e254692a02e4acedf5137b6c34f380a200e";
+	
 	final CommandSender cs;
 	final MixBukkit mb;
 
@@ -26,7 +43,7 @@ public class SetupThread extends Thread {
 	@Override
 	public void run() {
 		JSONObject json = new JSONObject();
-		json.put("client_id", "dabece39df722e254692a02e4acedf5137b6c34f380a200e");
+		json.put("client_id", client_id);
 		json.put("scope", "chat:connect chat:chat chat:whisper interactive:robot:self");
 		boolean finished = false;
 		try {
@@ -65,27 +82,40 @@ public class SetupThread extends Thread {
 					if (statusCode == 200L) {
 						if (codeJSON.containsKey("code")) {
 							finished = true;
-							cs.sendMessage("OAuth token received!");
-							String OAuth = (String) codeJSON.get("code");
-							System.out.println(OAuth); //FIXME Delete eventually
-							mb.mixer = new MixerAPI(OAuth);
-							cs.sendMessage("Setup of Mixer API finished!");
-							if (mb.config.getBoolean("configured")) {
-								mb.gameClient = new GameClient(mb.config.getInt("mixer_project_version"));
-								if (mb.config.getBoolean("mixer_sharecode_needed")) {
-									mb.gameClient.connect(OAuth, mb.config.getString("mixer_sharecode"));
-									cs.sendMessage("Setup of Game Client finished!");
-									cs.sendMessage("All Done!");
-									return;
-								} else {
-									mb.gameClient.connect(OAuth);
-									cs.sendMessage("Setup of Game Client finished!");
-									cs.sendMessage("All Done!");
+							cs.sendMessage("OAuth token token received!");
+							String AuthCode = (String) codeJSON.get("code");
+							JSONObject tokenJSON = new JSONObject();
+							tokenJSON.put("grant_type", "authorization_code");
+							tokenJSON.put("client_id", client_id);
+							tokenJSON.put("code", AuthCode);
+							//tokenJSON.put("redirect_uri", "https://mosadie.github.io/MixBukkitSuccess");
+							ResponseHandler<String> rh = new ResponseHandler<String>() {
+								@Override
+								public String handleResponse(HttpResponse response)
+										throws ClientProtocolException, IOException {
+									StatusLine statusLine = response.getStatusLine();
+							        HttpEntity entity = response.getEntity();
+							        if (entity == null) {
+							        	throw new ClientProtocolException("Response contains no content");
+							        }
+							        String output = IOUtils.toString(entity.getContent());
+							        System.out.println("OauthJSON: "+output);
+							        return output;
 								}
-							} else {
-								cs.sendMessage("All Done!");
+							};
+							String oauthJSON = Request.Post("https://mixer.com/api/v1/oauth/token").bodyString(tokenJSON.toJSONString(), ContentType.APPLICATION_JSON).execute().handleResponse(rh);
+							//Response debugresponse = Request.Post("http://mixer.com/api/v1/oauth/token").bodyString(tokenJSON.toJSONString(), ContentType.APPLICATION_JSON).execute();
+							//String oauthJSON = response.returnContent().asString();
+							JSONObject OAuthJson = (JSONObject) parser.parse(oauthJSON);
+							if (!OAuthJson.containsKey("access_token")) {
+								cs.sendMessage("Something went wrong");
 								return;
 							}
+							mb.config.set("refresh_token", (String) OAuthJson.get("refresh_token"));
+							mb.saveConfig();
+							mb.finishSetup(OAuthJson,cs);
+							finished=true;
+							return;
 						} else {
 							finished = true;
 							return;
