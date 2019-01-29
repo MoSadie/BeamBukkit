@@ -1,5 +1,5 @@
 name: MixBukkit
-main: io.github.mosadie.MixBukkit.MixBukkit
+main: io.github.mosadie.mixbukkit.MixBukkit
 version: 1.0
 author: MoSadie
 description: Manages a connection to Mixer to make Mixer Interactive compatable Bukkit plugins.

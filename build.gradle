@@ -1,0 +1,46 @@
+plugins {
+    id 'java-library'
+    id "com.github.johnrengelman.shadow" version "4.0.3"
+}
+
+repositories {
+    maven {
+        url 'http://maven.mixer.com/content/repositories/releases/'
+    }
+    maven {
+        url 'http://maven.mixer.com/content/repositories/snapshots/'
+    }
+    maven {
+        url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+    maven {
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.mixer:mixer-interactive-api:3.2.0'
+    compile 'com.mixer:api:6.0.0-SNAPSHOT'
+
+    compileOnly "org.spigotmc:spigot-api:1.13.1-R0.1-SNAPSHOT"
+    
+    compile "org.apache.httpcomponents:httpclient:4.5.3"
+    compile "org.apache.httpcomponents:fluent-hc:4.5.2"
+}
+
+// When Javadoc is created (./gradlew.bat javadoc) it will be in this directory in the project folder.
+javadoc {
+    destinationDir = new File("docs")
+}
+
+// Create Javadoc Jar
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+// Additional artifacts to publish for JitPack
+artifacts {
+    archives javadocJar
+}
