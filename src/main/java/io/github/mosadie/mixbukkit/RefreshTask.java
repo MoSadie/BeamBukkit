@@ -34,7 +34,7 @@ public class RefreshTask extends BukkitRunnable {
 		formparams.add(new BasicNameValuePair("client_id", SetupThread.client_id));
 		UrlEncodedFormEntity formentity = new UrlEncodedFormEntity(formparams, Consts.UTF_8);
 		httpPost.setEntity(formentity);
-		CloseableHttpClient httpClient = plugin.getHttpClient();
+		CloseableHttpClient httpClient = MixBukkit.httpClient;
 		try {
 			JSONObject json = httpClient.execute(httpPost, plugin.getResponseHander());
 						

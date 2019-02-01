@@ -54,9 +54,9 @@ import io.github.mosadie.mixbukkit.events.ControlMouseUpInput;
 import io.github.mosadie.mixbukkit.events.ControlMoveInput;
 
 public class MixBukkit extends JavaPlugin {	
-	private CloseableHttpClient httpClient = HttpClients.custom()
+	public static final CloseableHttpClient httpClient = HttpClients.custom()
 	.setDefaultRequestConfig(RequestConfig.custom()
-	.setCookieSpec(CookieSpecs.STANDARD).build())
+	.setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
 	.build();
 	
 	private ResponseHandler<JSONObject> responseHander = new ResponseHandler<JSONObject>() {
@@ -357,10 +357,6 @@ public class MixBukkit extends JavaPlugin {
 			cs.sendMessage("All Done!");
 			return;
 		}
-	}
-	
-	public CloseableHttpClient getHttpClient() {
-		return httpClient;
 	}
 
 	public ResponseHandler<JSONObject> getResponseHander() {

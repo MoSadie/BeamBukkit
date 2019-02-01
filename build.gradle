@@ -25,8 +25,7 @@ dependencies {
 
     compileOnly "org.spigotmc:spigot-api:1.13.1-R0.1-SNAPSHOT"
     
-    compile "org.apache.httpcomponents:httpclient:4.5.3"
-    compile "org.apache.httpcomponents:fluent-hc:4.5.2"
+    compile "org.apache.httpcomponents:httpclient:4.5.7"
 }
 
 // When Javadoc is created (./gradlew.bat javadoc) it will be in this directory in the project folder.

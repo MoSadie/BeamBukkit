@@ -38,7 +38,7 @@ public class SetupThread extends Thread {
 		json.put("client_id", client_id);
 		json.put("scope", "chat:connect chat:chat chat:whisper interactive:robot:self");
 		
-		HttpClient httpClient = mb.getHttpClient();
+		HttpClient httpClient = MixBukkit.httpClient;
 		boolean finished = false;
 		HttpPost httpPost = new HttpPost("https://mixer.com/api/v1/oauth/shortcode");
 		StringEntity body = new StringEntity(json.toJSONString(), ContentType.APPLICATION_JSON);
