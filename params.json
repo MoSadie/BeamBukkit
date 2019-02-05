@@ -1,6 +1,0 @@
-{
-  "name": "Beambukkit",
-  "tagline": "Manages a connection to Beam Interactive system on a Bukkit Server.",
-  "body": "# BeamBukkit\r\nManages a connection to Beam Interactive on a Bukkit Server.\r\n\r\n## What is this?\r\nThis plugin for a Bukkit server manages the creation and management of a connection to the Beam Interactive system. Developers can use this to not have to create a Beam robot and not have multiple robots connected from one server.\r\n",
-  "note": "Don't delete this file! It's used internally to help with page regeneration."
-}

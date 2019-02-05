@@ -1,0 +1,8 @@
+title: Beambukkit
+description: Manages a connection to Beam Interactive system on a Bukkit Server.
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-cayman
+
+gems:
+  - jekyll-mentions
