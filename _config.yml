@@ -1,5 +1,5 @@
-title: Beambukkit
-description: Manages a connection to Beam Interactive system on a Bukkit Server.
+title: MixBukkit
+description: Manages a connection to Mixer's MixPlay service on a Bukkit Server.
 google_analytics: 
 show_downloads: true
 theme: jekyll-theme-cayman
