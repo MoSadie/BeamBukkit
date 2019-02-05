@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -34,9 +36,11 @@ public class SetupThread extends Thread {
 	
 	@Override
 	public void run() {
-		JSONObject json = new JSONObject();
-		json.put("client_id", client_id);
-		json.put("scope", "chat:connect chat:chat chat:whisper interactive:robot:self");
+		Map<String, String> jsonMap = new HashMap<>();
+		jsonMap.put("client_id", client_id);
+		jsonMap.put("scope", "chat:connect chat:chat chat:whisper interactive:robot:self");
+		
+		JSONObject json = new JSONObject(jsonMap);
 		
 		HttpClient httpClient = MixBukkit.httpClient;
 		boolean finished = false;
@@ -98,10 +102,11 @@ public class SetupThread extends Thread {
 				} else {
 					finished = true;
 					cs.sendMessage("OAuth token token received!");
-					JSONObject tokenJSON = new JSONObject();
-					tokenJSON.put("grant_type", "authorization_code");
-					tokenJSON.put("client_id", client_id);
-					tokenJSON.put("code", authCode);
+					Map<String, String> tokenJSONMap = new HashMap<>();
+					tokenJSONMap.put("grant_type", "authorization_code");
+					tokenJSONMap.put("client_id", client_id);
+					tokenJSONMap.put("code", authCode);
+					JSONObject tokenJSON = new JSONObject(tokenJSONMap);
 
 					HttpPost oauthPost = new HttpPost("https://mixer.com/api/v1/oauth/token");
 					StringEntity oauthEntity = new StringEntity(tokenJSON.toJSONString(), ContentType.APPLICATION_JSON);
