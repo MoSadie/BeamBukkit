@@ -7,9 +7,9 @@ import java.util.List;
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.json.simple.JSONObject;
@@ -34,7 +34,7 @@ public class RefreshTask extends BukkitRunnable {
 		formparams.add(new BasicNameValuePair("client_id", SetupThread.client_id));
 		UrlEncodedFormEntity formentity = new UrlEncodedFormEntity(formparams, Consts.UTF_8);
 		httpPost.setEntity(formentity);
-		CloseableHttpClient httpClient = MixBukkit.httpClient;
+		HttpClient httpClient = MixBukkit.httpClient;
 		try {
 			JSONObject json = httpClient.execute(httpPost, plugin.getResponseHander());
 						

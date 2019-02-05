@@ -34,13 +34,13 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -54,10 +54,9 @@ import io.github.mosadie.mixbukkit.events.ControlMouseUpInput;
 import io.github.mosadie.mixbukkit.events.ControlMoveInput;
 
 public class MixBukkit extends JavaPlugin {	
-	public static final CloseableHttpClient httpClient = HttpClients.custom()
+	public static HttpClient httpClient = HttpClientBuilder.create()
 	.setDefaultRequestConfig(RequestConfig.custom()
-	.setCookieSpec(CookieSpecs.IGNORE_COOKIES).build())
-	.build();
+		.setCookieSpec(CookieSpecs.IGNORE_COOKIES).build()).build();
 	
 	private ResponseHandler<JSONObject> responseHander = new ResponseHandler<JSONObject>() {
 		@Override
@@ -72,10 +71,10 @@ public class MixBukkit extends JavaPlugin {
 			}
 			JSONParser parser = new JSONParser();
 			ContentType contentType = ContentType.getOrDefault(entity);
-        	Charset charset = contentType.getCharset();
+			Charset charset = contentType.getCharset();
 			Reader reader = new InputStreamReader(entity.getContent(), charset);
 			try {
-			return (JSONObject)parser.parse(reader);
+				return (JSONObject)parser.parse(reader);
 			} catch (ParseException e) {
 				e.printStackTrace();
 				return null;
@@ -358,7 +357,7 @@ public class MixBukkit extends JavaPlugin {
 			return;
 		}
 	}
-
+	
 	public ResponseHandler<JSONObject> getResponseHander() {
 		return responseHander;
 	}
