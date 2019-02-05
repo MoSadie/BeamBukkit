@@ -28,6 +28,7 @@ public class ControlInputEventBase extends Event implements Cancellable {
 	}
 	
 	/** A reference to the MixBukkit plugin. */
+	@SuppressWarnings("unused")
 	private final MixBukkit mb;
 
 	/** The actual ControlInputEvent provided by the Mixer Interactive Java API. */
